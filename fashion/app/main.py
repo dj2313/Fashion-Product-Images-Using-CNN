@@ -1,0 +1,59 @@
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+from contextlib import asynccontextmanager
+
+from .model import load_models, predict_image, CLASS_DISTRIBUTION, TOTAL_IMAGES, NUM_CLASSES, IMAGE_SIZE
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load models on startup
+    load_models()
+    yield
+
+app = FastAPI(title="Fashion CNN Classifier", lifespan=lifespan)
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Templates
+templates = Jinja2Templates(directory="app/templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html", 
+        context={
+            "stats": {
+                "total": TOTAL_IMAGES,
+                "classes": NUM_CLASSES,
+                "size": IMAGE_SIZE
+            }
+        }
+    )
+
+@app.post("/predict")
+async def predict(image: UploadFile = File(...), model_name: str = Form(...)):
+    # Read the file contents
+    contents = await image.read()
+    
+    # Check if empty
+    if not contents:
+        return JSONResponse(status_code=400, content={"error": "Empty file uploaded"})
+        
+    result = predict_image(contents, model_name)
+    
+    return result
+
+@app.get("/stats")
+async def get_stats():
+    return {
+        "distribution": CLASS_DISTRIBUTION,
+        "accuracies": {
+            "cnn": "85.2%",
+            "mobilenet": "91.4%"
+        }
+    }

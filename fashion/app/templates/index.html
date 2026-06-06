@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion CNN Classifier</title>
+    <!-- Google Fonts: Syne & Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <nav class="reveal">
+        <div class="nav-content">
+            <div class="logo">Fashion<span class="neon-text">CNN</span></div>
+            <div class="nav-links">
+                <a href="#hero">Home</a>
+                <a href="#dataset">Dataset</a>
+                <a href="#architecture">Architecture</a>
+                <a href="#predict">Live Predict</a>
+                <a href="#results">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 1. HERO SECTION -->
+    <section id="hero" class="hero">
+        <div class="glow-orb"></div>
+        <div class="container text-center reveal delay-1">
+            <h1>AI-Driven Fashion <span class="neon-text">Intelligence</span></h1>
+            <p class="subtitle">Next-Generation Classification Pipeline</p>
+            <p class="description">
+                Experience real-time image recognition powered by deep learning. Trained on 31,000+ Kaggle products to categorize apparel instantly.
+            </p>
+            <div class="classes-pills">
+                <span class="pill pulse">Topwear</span>
+                <span class="pill pulse delay-1">Shoes</span>
+                <span class="pill pulse delay-2">Bags</span>
+                <span class="pill pulse delay-3">Bottomwear</span>
+                <span class="pill pulse delay-4">Watches</span>
+            </div>
+            <a href="#predict" class="btn btn-primary mt-8 glow-hover">Initialize Model</a>
+        </div>
+    </section>
+
+    <!-- 2. DATASET SECTION -->
+    <section id="dataset" class="section">
+        <div class="container">
+            <h2 class="section-title reveal">Dataset Intelligence</h2>
+            <div class="bento-grid">
+                <div class="card bento-item reveal stat-box">
+                    <div class="stat-icon pulse-slow">📊</div>
+                    <h3>{{ stats.total }}</h3>
+                    <p class="stat-label">Total Images Analyzed</p>
+                </div>
+                <div class="card bento-item reveal stat-box delay-1">
+                    <div class="stat-icon pulse-slow">🏷️</div>
+                    <h3>{{ stats.classes }}</h3>
+                    <p class="stat-label">Distinct Categories</p>
+                </div>
+                <div class="card bento-item reveal stat-box delay-2">
+                    <div class="stat-icon pulse-slow">🔍</div>
+                    <h3>{{ stats.size }}x{{ stats.size }}</h3>
+                    <p class="stat-label">Input Resolution</p>
+                </div>
+                <div class="card bento-item reveal chart-box" style="grid-column: span 3;">
+                    <h3>Class Distribution Analytics</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. MODEL ARCHITECTURE SECTION -->
+    <section id="architecture" class="section bg-card-section">
+        <div class="container">
+            <h2 class="section-title reveal">Neural Architecture</h2>
+            <div class="bento-grid-2">
+                <div class="card bento-item reveal">
+                    <h3>Custom CNN Backbone</h3>
+                    <p class="mb-4 text-secondary">A lightweight, custom-built Convolutional Neural Network consisting of 3 convolutional blocks followed by a fully connected classifier.</p>
+                    
+                    <div class="cnn-diagram">
+                        <div class="layer-block">
+                            <div class="layer-title">Block 1</div>
+                            <div class="layer-detail">Conv2d (16) → ReLU → MaxPool (2x2)</div>
+                        </div>
+                        <div class="arrow">↓</div>
+                        <div class="layer-block">
+                            <div class="layer-title">Block 2</div>
+                            <div class="layer-detail">Conv2d (32) → ReLU → MaxPool (2x2)</div>
+                        </div>
+                        <div class="arrow">↓</div>
+                        <div class="layer-block">
+                            <div class="layer-title">Block 3</div>
+                            <div class="layer-detail">Conv2d (64) → ReLU → AdaptiveAvgPool</div>
+                        </div>
+                        <div class="arrow">↓</div>
+                        <div class="layer-block fc-block">
+                            <div class="layer-title">Classifier</div>
+                            <div class="layer-detail">Linear (128) → ReLU → Linear (5)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card bento-item reveal delay-1">
+                    <h3>MobileNetV3-Small</h3>
+                    <p class="text-secondary">
+                        Transfer learning utilizing depthwise separable convolutions and inverted residual blocks for maximum efficiency on edge devices.
+                    </p>
+                    <ul class="model-features mt-4">
+                        <li><strong>Parameters:</strong> ~1.5M (Trainable)</li>
+                        <li><strong>Input Size:</strong> 224x224x3</li>
+                        <li><strong>Modifications:</strong> Replaced classifier with `Linear(576, 128) → Hardswish → Linear(128, 5)` to match 5 fashion classes.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. LIVE PREDICTION SECTION -->
+    <section id="predict" class="section">
+        <div class="container text-center">
+            <h2 class="section-title reveal">Live Prediction Interface</h2>
+            <div class="predict-container card bento-item reveal glow-hover">
+                
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label for="modelSelect">Select Inference Engine</label>
+                        <select id="modelSelect" name="model_name">
+                            <option value="cnn">Custom CNN</option>
+                            <option value="mobilenet">MobileNetV3-Small</option>
+                        </select>
+                    </div>
+
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="imageInput" name="image" accept=".jpg, .jpeg, .png" hidden>
+                        <label for="imageInput" class="upload-label">
+                            <div class="upload-icon pulse-slow">📁</div>
+                            <span>Click or drag to drop an image payload</span>
+                        </label>
+                        <img id="imagePreview" class="image-preview" src="#" alt="Preview" style="display: none;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block glow-hover" id="predictBtn" disabled>Execute Inference</button>
+                </form>
+
+                <!-- AI Shimmer Loader -->
+                <div id="loading" class="shimmer-loader" style="display: none;">
+                    <div class="shimmer-block"></div>
+                    <div class="shimmer-text pulse">Processing Tensor Operations...</div>
+                </div>
+
+                <div id="errorBox" class="error-box" style="display: none;"></div>
+
+                <div id="resultArea" class="result-area" style="display: none;">
+                    <div class="primary-result">
+                        <span class="predicted-label">Identified Classification</span>
+                        <h2 id="topClassText" class="neon-text">Topwear</h2>
+                        <div class="confidence-badge">
+                            <span id="topConfidenceText">95.4%</span> Confidence
+                        </div>
+                    </div>
+                    
+                    <div class="all-scores">
+                        <h4>Probability Distribution</h4>
+                        <div id="scoresBars" class="scores-bars">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. RESULTS & METHODOLOGY -->
+    <section id="results" class="section bg-card-section">
+        <div class="container">
+            <h2 class="section-title reveal">Evaluation Metrics & Pipeline</h2>
+            
+            <div class="bento-grid-2">
+                <div class="card bento-item reveal pdf-card">
+                    <h3>Confusion Matrix</h3>
+                    <div class="pdf-container">
+                        <embed src="/static/confusion_matrix.pdf?v=1" type="application/pdf" width="100%" height="100%" />
+                    </div>
+                </div>
+                <div class="card bento-item reveal delay-1 pdf-card">
+                    <h3>Learning Curves</h3>
+                    <div class="pdf-container">
+                        <embed src="/static/learning_curves.pdf?v=1" type="application/pdf" width="100%" height="100%" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Methodology Track -->
+            <div class="card bento-item reveal mt-8">
+                <h3>Data Pipeline</h3>
+                <div class="pipeline">
+                    <div class="step">
+                        <div class="step-number pulse">1</div>
+                        <h4>Load</h4>
+                        <p>31K Kaggle dataset images</p>
+                    </div>
+                    <div class="step-arrow neon-text">→</div>
+                    <div class="step">
+                        <div class="step-number pulse delay-1">2</div>
+                        <h4>Preprocess</h4>
+                        <p>Resize 224x224 & Normalize</p>
+                    </div>
+                    <div class="step-arrow neon-text">→</div>
+                    <div class="step">
+                        <div class="step-number pulse delay-2">3</div>
+                        <h4>Augment</h4>
+                        <p>H-Flip & Random Rotation</p>
+                    </div>
+                    <div class="step-arrow neon-text">→</div>
+                    <div class="step">
+                        <div class="step-number pulse delay-3">4</div>
+                        <h4>Train</h4>
+                        <p>Adam & Cross-Entropy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container text-center reveal">
+            <p>&copy; 2026 Fashion CNN Classifier | Neural Networks Division</p>
+        </div>
+    </footer>
+
+    <script src="/static/charts.js"></script>
+    <script>
+        // Intersection Observer for Reveal Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // UI Interactions for Predict Section
+        const form = document.getElementById('predictionForm');
+        const fileInput = document.getElementById('imageInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const uploadLabel = document.querySelector('.upload-label');
+        const predictBtn = document.getElementById('predictBtn');
+        
+        const loading = document.getElementById('loading');
+        const errorBox = document.getElementById('errorBox');
+        const resultArea = document.getElementById('resultArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updatePreview();
+            }
+        });
+        
+        fileInput.addEventListener('change', updatePreview);
+        
+        function updatePreview() {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadLabel.style.display = 'none';
+                    predictBtn.disabled = false;
+                }
+                reader.readAsDataURL(file);
+                
+                resultArea.style.display = 'none';
+                errorBox.style.display = 'none';
+            }
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!fileInput.files.length) return;
+            
+            const formData = new FormData(form);
+            
+            predictBtn.disabled = true;
+            loading.style.display = 'flex';
+            errorBox.style.display = 'none';
+            resultArea.style.display = 'none';
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                
+                if (data.error) {
+                    errorBox.textContent = data.error;
+                    errorBox.style.display = 'block';
+                    return;
+                }
+                
+                document.getElementById('topClassText').textContent = data.class;
+                document.getElementById('topConfidenceText').textContent = data.confidence.toFixed(2) + '%';
+                
+                const scoresBars = document.getElementById('scoresBars');
+                scoresBars.innerHTML = '';
+                
+                const sortedScores = Object.entries(data.all_scores).sort((a, b) => b[1] - a[1]);
+                
+                sortedScores.forEach(([className, score], index) => {
+                    const percentage = (score * 100).toFixed(2);
+                    const barHtml = `
+                        <div class="score-row reveal active" style="transition-delay: ${index * 0.1}s">
+                            <div class="score-label">${className}</div>
+                            <div class="score-bar-bg">
+                                <div class="score-bar-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="score-val">${percentage}%</div>
+                        </div>
+                    `;
+                    scoresBars.insertAdjacentHTML('beforeend', barHtml);
+                });
+                
+                resultArea.style.display = 'block';
+                
+            } catch (err) {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                errorBox.textContent = "Network error occurred.";
+                errorBox.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
