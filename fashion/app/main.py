@@ -6,8 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
 from contextlib import asynccontextmanager
 import os
+import pathlib
 
 from .model import load_models, predict_image, CLASS_DISTRIBUTION, TOTAL_IMAGES, NUM_CLASSES, IMAGE_SIZE
+
+# Resolve all paths relative to this file's location (fashion/app/main.py)
+BASE_DIR = pathlib.Path(__file__).parent.parent  # -> fashion/
+STATIC_DIR = BASE_DIR / "static"
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
+FRONTEND_ASSETS = FRONTEND_DIST / "assets"
+TEMPLATES_DIR = BASE_DIR / "app" / "templates"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,20 +35,21 @@ app.add_middleware(
 )
 
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static files (only if directory exists)
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-if os.path.exists("frontend/dist/assets"):
-    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+if FRONTEND_ASSETS.exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="assets")
 
 # Templates
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    index_path = "frontend/dist/index.html"
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
+    index_path = FRONTEND_DIST / "index.html"
+    if index_path.exists():
+        return FileResponse(str(index_path))
     else:
         return templates.TemplateResponse(
             request=request,
