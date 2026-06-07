@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
 from contextlib import asynccontextmanager
 import os
@@ -15,6 +16,16 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Fashion CNN Classifier", lifespan=lifespan)
+
+# Allow cross-origin requests from the Vercel frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Update with your Vercel URL after deploying, e.g. ["https://fashion-app.vercel.app"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

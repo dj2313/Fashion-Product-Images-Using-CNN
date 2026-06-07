@@ -28,7 +28,8 @@ export default function Predictor() {
     fd.append('image', file);
     fd.append('model_name', modelName);
     try {
-      const res = await fetch('/predict', { method: 'POST', body: fd });
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/predict`, { method: 'POST', body: fd });
       const data = await res.json();
       if (data.error) setError(data.error);
       else setResult(data);

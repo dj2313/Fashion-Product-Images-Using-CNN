@@ -1,7 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 torch
 torchvision
 pillow
 python-multipart
 jinja2
+python-dotenv
