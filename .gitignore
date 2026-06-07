@@ -1,1 +1,12 @@
-.CLAUDE.md
+CLAUDE.md
+.claude/
+.agent/
+
+# Agent-generated docs
+completionreport.md
+COMPLETION_REPORT.md
+design_system.md
+quick_start.md
+setup.md
+SETUP_GUIDE.md
+visual_changes.md
