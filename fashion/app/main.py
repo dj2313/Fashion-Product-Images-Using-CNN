@@ -1,9 +1,10 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from contextlib import asynccontextmanager
+import os
 
 from .model import load_models, predict_image, CLASS_DISTRIBUTION, TOTAL_IMAGES, NUM_CLASSES, IMAGE_SIZE
 
@@ -18,22 +19,29 @@ app = FastAPI(title="Fashion CNN Classifier", lifespan=lifespan)
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+if os.path.exists("frontend/dist/assets"):
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
 # Templates
 templates = Jinja2Templates(directory="app/templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html", 
-        context={
-            "stats": {
-                "total": TOTAL_IMAGES,
-                "classes": NUM_CLASSES,
-                "size": IMAGE_SIZE
+    index_path = "frontend/dist/index.html"
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        return templates.TemplateResponse(
+            request=request,
+            name="index.html", 
+            context={
+                "stats": {
+                    "total": TOTAL_IMAGES,
+                    "classes": NUM_CLASSES,
+                    "size": IMAGE_SIZE
+                }
             }
-        }
-    )
+        )
 
 @app.post("/predict")
 async def predict(image: UploadFile = File(...), model_name: str = Form(...)):

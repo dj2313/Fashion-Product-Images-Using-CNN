@@ -9,14 +9,14 @@ import pathlib
 # Hardcoded constants
 CLASS_DISTRIBUTION = {
     "Topwear": 15401,
+    "Bottomwear": 2693,
     "Shoes": 7344,
     "Bags": 3055,
-    "Bottomwear": 2693,
     "Watches": 2542
 }
 TOTAL_IMAGES = 31035
 NUM_CLASSES = 5
-IMAGE_SIZE = 224
+IMAGE_SIZE = 64
 
 CLASSES = list(CLASS_DISTRIBUTION.keys())
 
@@ -41,7 +41,7 @@ class FashionCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(64, 128),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.Linear(128, 5)
         )
     def forward(self, x):
@@ -49,11 +49,24 @@ class FashionCNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.classifier(x)
 
-# Normalization based on prompt
-transform = transforms.Compose([
-    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+# Custom CNN Transform (trained on 64x64)
+cnn_transform = transforms.Compose([
+    transforms.Resize((64,64)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+
+# MobileNetV3 Transform (trained on 224x224)
+mobilenet_transform = transforms.Compose([
+    transforms.Resize((224,224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
 ])
 
 # Global models cache
@@ -65,7 +78,9 @@ loaded_models = {
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_models():
-    models_dir = pathlib.Path("models")
+    # Get the directory where this file is located, then go up to find models/
+    current_dir = pathlib.Path(__file__).parent.parent  # app/ -> fashion/
+    models_dir = current_dir / "models"
     
     # 1. Load Custom CNN
     cnn_path = models_dir / "custom_fashion_cnn.pth"
@@ -75,9 +90,9 @@ def load_models():
         custom_cnn.to(device)
         custom_cnn.eval()
         loaded_models["cnn"] = custom_cnn
-        print("Loaded Custom CNN successfully.")
+        print(f"✓ Loaded Custom CNN from {cnn_path}")
     except Exception as e:
-        print(f"Could not load Custom CNN: {e}")
+        print(f"✗ Could not load Custom CNN from {cnn_path}: {e}")
 
     # 2. Load MobileNetV3
     mobilenet_path = models_dir / "mobilenetv3_fashion.pth"
@@ -93,9 +108,9 @@ def load_models():
         mobilenet.to(device)
         mobilenet.eval()
         loaded_models["mobilenet"] = mobilenet
-        print("Loaded MobileNetV3 successfully.")
+        print(f"✓ Loaded MobileNetV3 from {mobilenet_path}")
     except Exception as e:
-        print(f"Could not load MobileNetV3: {e}")
+        print(f"✗ Could not load MobileNetV3 from {mobilenet_path}: {e}")
 
 def predict_image(image_bytes: bytes, model_name: str):
     if model_name not in loaded_models:
@@ -103,17 +118,36 @@ def predict_image(image_bytes: bytes, model_name: str):
         
     model = loaded_models[model_name]
     if model is None:
-        return {"error": "Model file not found. Drop .pth in /models folder."}
+        model_display = "Custom CNN" if model_name == "cnn" else "MobileNetV3"
+        return {"error": f"{model_display} failed to load. Check server logs."}
         
     try:
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        input_tensor = transform(img).unsqueeze(0).to(device)
+        img = Image.open(io.BytesIO(image_bytes))
+        
+        # Handle different image modes - convert to RGB
+        if img.mode == 'RGBA':
+            # For transparent images, create white background (matches ImageNet training)
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            background.paste(img, mask=img.split()[3])
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert("RGB")
+            
+        if model_name == "cnn":
+            input_tensor = cnn_transform(img).unsqueeze(0).to(device)
+        else:
+            input_tensor = mobilenet_transform(img).unsqueeze(0).to(device)
         
         with torch.no_grad():
             output = model(input_tensor)
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
+
+            print("\n===== Prediction Scores =====")
+
+            for i, cls in enumerate(CLASSES):
+                print(f"{cls}: {float(probabilities[i]):.4f}")
             
-        top_prob, top_class = torch.max(probabilities, 0)
+            top_prob, top_class = torch.max(probabilities, 0)
         
         all_scores = {CLASSES[i]: float(probabilities[i]) for i in range(NUM_CLASSES)}
         
