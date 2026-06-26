@@ -1099,3 +1099,69 @@ input:checked + .slider:before {
     margin-top: 0.5rem;
   }
 }
+
+/* Recommendations Grid */
+.recommendations-container {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.recommendation-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.recommendation-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rec-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.recommendation-card:hover .rec-overlay {
+  opacity: 1;
+}
+
+.rec-overlay .btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  color: white;
+  background-color: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.rec-overlay .btn-sm:hover {
+  background-color: var(--primary-light);
+}

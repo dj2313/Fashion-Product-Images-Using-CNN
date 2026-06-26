@@ -10,6 +10,8 @@ export default function Predictor() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [useGradCam, setUseGradCam] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [actionMsg, setActionMsg] = useState(null);
   const fileRef = useRef(null);
 
   const handleFile = (f) => {
@@ -17,6 +19,18 @@ export default function Predictor() {
     setPreview(URL.createObjectURL(f));
     setResult(null);
     setError(null);
+    setRecommendations([]);
+    setActionMsg(null);
+  };
+
+  const handleApprove = () => {
+    setActionMsg({ type: 'success', text: `✓ Successfully approved "${result.class}" to inventory!` });
+    setTimeout(() => setActionMsg(null), 3500);
+  };
+
+  const handleOverride = () => {
+    setActionMsg({ type: 'danger', text: `⚠ Flagged "${result.class}" for manual review.` });
+    setTimeout(() => setActionMsg(null), 3500);
   };
 
   const handleSubmit = async (e) => {
@@ -28,12 +42,23 @@ export default function Predictor() {
     const fd = new FormData();
     fd.append('image', file);
     fd.append('model_name', modelName);
+    fd.append('use_gradcam', useGradCam);
     try {
       const API_URL = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${API_URL}/predict`, { method: 'POST', body: fd });
       const data = await res.json();
       if (data.error) setError(data.error);
-      else setResult(data);
+      else {
+        setResult(data);
+        // Fetch recommendations
+        try {
+          const recRes = await fetch(`${API_URL}/recommendations?category=${data.class}`);
+          const recData = await recRes.json();
+          setRecommendations(recData.recommendations || []);
+        } catch (err) {
+          console.error("Failed to fetch recommendations:", err);
+        }
+      }
     } catch {
       setError('Network error occurred.');
     } finally {
@@ -93,7 +118,17 @@ export default function Predictor() {
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
               <AnimatePresence mode="wait">
-                {preview ? (
+                {result && result.gradcam_image ? (
+                  <motion.img
+                    key="gradcam"
+                    src={result.gradcam_image}
+                    alt="Grad-CAM Heatmap"
+                    className="image-preview"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  />
+                ) : preview ? (
                   <motion.img
                     key="img"
                     src={preview}
@@ -212,10 +247,23 @@ export default function Predictor() {
                     </div>
                   </div>
 
-                  <div className="ds-actions">
-                    <button type="button" className="btn btn-success">✓ Approve Tag to Inventory</button>
-                    <button type="button" className="btn btn-danger">⚠ Override Manually</button>
+                  <div className="ds-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                    <button type="button" className="btn btn-success" onClick={handleApprove} style={{ flex: 1, whiteSpace: 'nowrap' }}>✓ Approve Tag to Inventory</button>
+                    <button type="button" className="btn btn-danger" onClick={handleOverride} style={{ flex: 1, whiteSpace: 'nowrap' }}>⚠ Override Manually</button>
                   </div>
+                  
+                  <AnimatePresence>
+                    {actionMsg && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }} 
+                        animate={{ opacity: 1, height: 'auto' }} 
+                        exit={{ opacity: 0, height: 0 }}
+                        style={{ marginTop: '1rem', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center', background: actionMsg.type === 'success' ? '#dcfce7' : '#fee2e2', color: actionMsg.type === 'success' ? '#166534' : '#991b1b', border: `1px solid ${actionMsg.type === 'success' ? '#bbf7d0' : '#fecaca'}` }}
+                      >
+                        {actionMsg.text}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <h4 className="scores-title">Probability Distribution</h4>
@@ -240,6 +288,32 @@ export default function Predictor() {
                       );
                     })}
                 </div>
+
+                {/* Recommendations Section */}
+                {recommendations && recommendations.length > 0 && (
+                  <motion.div 
+                    className="recommendations-container"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <h4 className="scores-title">Similar Inventory Recommendations</h4>
+                    <div className="recommendations-grid">
+                      {recommendations.map((imgUrl, idx) => (
+                        <div key={idx} className="recommendation-card">
+                          <img 
+                            src={imgUrl} 
+                            alt={`${result.class} recommendation ${idx + 1}`} 
+                            onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/400x400/e2e8f0/475569?text=${result.class}+Match`; }}
+                          />
+                          <div className="rec-overlay">
+                            <button className="btn btn-primary btn-sm">View Match</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

@@ -8,7 +8,8 @@ export default defineConfig({
     proxy: {
       '/predict': 'http://localhost:8000',
       '/stats': 'http://localhost:8000',
-      '/static': 'http://localhost:8000'
+      '/static': 'http://localhost:8000',
+      '/recommendations': 'http://localhost:8000'
     }
   }
 })

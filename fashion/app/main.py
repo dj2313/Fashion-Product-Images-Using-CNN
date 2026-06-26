@@ -64,7 +64,11 @@ async def read_root(request: Request):
         )
 
 @app.post("/predict")
-async def predict(image: UploadFile = File(...), model_name: str = Form(...)):
+async def predict(
+    image: UploadFile = File(...), 
+    model_name: str = Form(...),
+    use_gradcam: bool = Form(False)
+):
     # Read the file contents
     contents = await image.read()
     
@@ -72,7 +76,7 @@ async def predict(image: UploadFile = File(...), model_name: str = Form(...)):
     if not contents:
         return JSONResponse(status_code=400, content={"error": "Empty file uploaded"})
         
-    result = predict_image(contents, model_name)
+    result = predict_image(contents, model_name, use_gradcam)
     
     return result
 
@@ -85,3 +89,28 @@ async def get_stats():
             "mobilenet": "91.4%"
         }
     }
+
+@app.get("/recommendations")
+async def get_recommendations(category: str):
+    cat_lower = category.lower()
+    recommendations = []
+    
+    # We generated images for topwear, bottomwear, shoes
+    rec_dir = STATIC_DIR / "recommendations"
+    if rec_dir.exists():
+        for file in os.listdir(rec_dir):
+            if file.startswith(cat_lower) and file.endswith(".png"):
+                recommendations.append(f"/static/recommendations/{file}")
+                
+    # Fallback to placeholders for categories we didn't generate
+    if not recommendations:
+        for i in range(1, 4):
+            recommendations.append(f"https://placehold.co/400x400/e2e8f0/475569?text={category}+{i}")
+            
+    # Always return exactly 3 for UI consistency if we only have 2 generated
+    if len(recommendations) < 3 and rec_dir.exists():
+        needed = 3 - len(recommendations)
+        for i in range(1, needed + 1):
+             recommendations.append(f"https://placehold.co/400x400/e2e8f0/475569?text={category}+Match")
+             
+    return {"category": category, "recommendations": recommendations[:3]}
