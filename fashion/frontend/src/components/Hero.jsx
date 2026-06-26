@@ -13,7 +13,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          AI-Driven Fashion <span className="neon-text">Intelligence</span>
+          AI-Assisted Fashion <span className="neon-text">Attribute Screening System</span>
         </motion.h1>
 
         <motion.p
@@ -22,7 +22,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
         >
-          Next-Generation Classification Pipeline
+          <span className="badge">Decision-Support Tool for Human Inventory Experts</span>
         </motion.p>
 
         <motion.p

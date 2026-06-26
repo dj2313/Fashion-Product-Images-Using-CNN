@@ -9,6 +9,7 @@ export default function Predictor() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [useGradCam, setUseGradCam] = useState(false);
   const fileRef = useRef(null);
 
   const handleFile = (f) => {
@@ -119,6 +120,22 @@ export default function Predictor() {
               </AnimatePresence>
             </div>
 
+            {/* Explainability Toggle */}
+            <div className="explainability-toggle-container">
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={useGradCam}
+                  onChange={(e) => setUseGradCam(e.target.checked)}
+                />
+                <span className="slider"></span>
+                <span className="toggle-label">Overlay Grad-CAM Attention Heatmap</span>
+              </label>
+              <p className="toggle-helper">
+                *Validates spatial trustworthiness by checking if the network focused on genuine object geometry instead of background studio noise.
+              </p>
+            </div>
+
             {/* Submit */}
             <motion.button
               type="submit"
@@ -176,10 +193,29 @@ export default function Predictor() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                <span className="result-label">Identified Classification</span>
-                <h2 className="result-class neon-text">{result.class}</h2>
-                <div className="confidence-badge">
-                  {result.confidence.toFixed(2)}% Confidence
+                <div className="decision-support-card">
+                  <div className="ds-header">Decision Support Framework</div>
+                  <span className="result-label">Identified Classification</span>
+                  <h2 className="result-class neon-text">{result.class}</h2>
+                  
+                  <div className="confidence-container">
+                    <div className="confidence-bar-bg">
+                      <motion.div 
+                        className="confidence-bar-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${result.confidence}%` }}
+                        transition={{ duration: 0.8 }}
+                      />
+                    </div>
+                    <div className="confidence-badge">
+                      {result.confidence.toFixed(1)}% System Confidence
+                    </div>
+                  </div>
+
+                  <div className="ds-actions">
+                    <button type="button" className="btn btn-success">✓ Approve Tag to Inventory</button>
+                    <button type="button" className="btn btn-danger">⚠ Override Manually</button>
+                  </div>
                 </div>
 
                 <h4 className="scores-title">Probability Distribution</h4>
