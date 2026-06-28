@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": "vite",
   "buildCommand": "cd fashion/frontend && npm install && npm run build",
   "outputDirectory": "fashion/frontend/dist",
   "rewrites": [
