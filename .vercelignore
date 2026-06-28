@@ -1,0 +1,10 @@
+# Tell Vercel to ignore the Python backend entirely.
+# The backend runs on Render — Vercel only serves the React frontend.
+fashion/app/
+fashion/models/
+fashion/outputs/
+fashion/static/
+fashion/s126-dhruv-trivedi-fashion-product-using-cnn.ipynb
+requirements.txt
+render.yaml
+Fashion_product_CNN.ipynb

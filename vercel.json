@@ -2,6 +2,7 @@
   "version": 2,
   "buildCommand": "cd fashion/frontend && npm install && npm run build",
   "outputDirectory": "fashion/frontend/dist",
+  "installCommand": "echo skip-root-install",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
