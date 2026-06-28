@@ -1,0 +1,9 @@
+{
+  "name": "fashion-cnn-classifier",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd fashion/frontend && npm install && npm run build",
+    "dev": "cd fashion/frontend && npm run dev"
+  }
+}

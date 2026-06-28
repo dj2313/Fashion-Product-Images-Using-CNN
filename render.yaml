@@ -3,7 +3,7 @@ services:
     name: fashion-cnn-api
     runtime: python
     buildCommand: >
-      pip install -r requirements.txt &&
+      pip install -r fashion/requirements.txt &&
       cd fashion/frontend &&
       npm install &&
       npm run build
