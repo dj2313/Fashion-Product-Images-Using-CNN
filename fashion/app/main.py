@@ -117,3 +117,10 @@ async def get_recommendations(category: str):
              recommendations.append(f"https://placehold.co/400x400/e2e8f0/475569?text={category}+Match")
              
     return {"category": category, "recommendations": recommendations[:3]}
+
+@app.get("/{file_path:path}")
+async def serve_frontend_assets(file_path: str):
+    file = FRONTEND_DIST / file_path
+    if file.exists() and file.is_file():
+        return FileResponse(str(file))
+    return JSONResponse(status_code=404, content={"error": "Not Found"})
