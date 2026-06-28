@@ -25,11 +25,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Fashion CNN Classifier", lifespan=lifespan)
 
-# Allow cross-origin requests from the Vercel frontend
+# Allow cross-origin requests from the Vercel frontend.
+# IMPORTANT: Replace "*" with your actual Vercel URL once deployed,
+# e.g. allow_origins=["https://your-app.vercel.app"]
+# You can also add multiple origins: ["https://your-app.vercel.app", "http://localhost:5173"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Update with your Vercel URL after deploying, e.g. ["https://fashion-app.vercel.app"]
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,   # Must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )

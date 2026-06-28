@@ -8,6 +8,22 @@ const steps = [
   { num: 4, title: 'Train', desc: 'Adam & Cross-Entropy' },
 ];
 
+// Image cards replace the old PDF <embed> tags.
+// Images are bundled into the frontend (public/) so Vercel can serve them
+// without requiring the Render backend to be awake.
+const charts = [
+  {
+    title: 'Confusion Matrix',
+    src: '/confusion_matrix.png',
+    alt: 'Confusion Matrix heatmap showing per-class accuracy',
+  },
+  {
+    title: 'Learning Curves',
+    src: '/learning_curves.png',
+    alt: 'Training and validation loss/accuracy over epochs',
+  },
+];
+
 export default function Results() {
   return (
     <section id="results" className="section section-alt">
@@ -22,42 +38,61 @@ export default function Results() {
           </motion.h2>
         </div>
 
-        {/* PDF Cards */}
+        {/* Chart Images (previously PDF embeds) */}
         <div className="grid-2">
-          <motion.div
-            className="card"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h3>Confusion Matrix</h3>
-            <div className="pdf-frame">
-              <embed
-                src="/static/confusion_matrix.pdf?v=2"
-                type="application/pdf"
-                width="100%"
-                height="100%"
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="card"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15 }}
-          >
-            <h3>Learning Curves</h3>
-            <div className="pdf-frame">
-              <embed
-                src="/static/learning_curves.pdf?v=2"
-                type="application/pdf"
-                width="100%"
-                height="100%"
-              />
-            </div>
-          </motion.div>
+          {charts.map((chart, i) => (
+            <motion.div
+              key={chart.title}
+              className="card"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15 }}
+            >
+              <h3>{chart.title}</h3>
+              <div
+                className="pdf-frame"
+                style={{
+                  overflow: 'hidden',
+                  borderRadius: '8px',
+                  background: 'var(--surface)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src={chart.src}
+                  alt={chart.alt}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                {/* Fallback message if image fails to load */}
+                <div
+                  style={{
+                    display: 'none',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '2rem',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  <span>📊</span>
+                  <span>{chart.title} — unavailable</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Pipeline */}
